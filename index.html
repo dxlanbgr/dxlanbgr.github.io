@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Valorant Widget</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --val-red: #741422;
+                --val-dark: #0f1923;
+                --val-darker: #080e14;
+                --val-white: #ece8e1;
+                --val-gold: #f5a623;
+                --val-teal: #00b4d8;
+                --val-glow: rgba(255, 70, 85, 0.5);
+                --green: #4ade80;
+                --red-soft: #f87171;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                image-rendering: pixelated;
+            }
+
+            body {
+                background: #060d14;
+                background-image:
+                    radial-gradient(
+                        ellipse at 20% 0%,
+                        rgba(255, 70, 85, 0.06) 0%,
+                        transparent 60%
+                    ),
+                    radial-gradient(
+                        ellipse at 80% 100%,
+                        rgba(0, 180, 216, 0.04) 0%,
+                        transparent 60%
+                    ),
+                    repeating-linear-gradient(
+                        0deg,
+                        transparent,
+                        transparent 40px,
+                        rgba(255, 255, 255, 0.012) 40px,
+                        rgba(255, 255, 255, 0.012) 41px
+                    ),
+                    repeating-linear-gradient(
+                        90deg,
+                        transparent,
+                        transparent 40px,
+                        rgba(255, 255, 255, 0.012) 40px,
+                        rgba(255, 255, 255, 0.012) 41px
+                    );
+                min-height: 100vh;
+                font-family: "Press Start 2P", monospace;
+                color: var(--val-white);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 36px 20px 60px;
+                gap: 32px;
+            }
+
+            /* ── PAGE HEADER ── */
+            .page-header {
+                text-align: center;
+            }
+
+            .page-title {
+                font-family: "Press Start 2P", monospace;
+                font-size: 13px;
+                color: var(--val-red);
+                letter-spacing: 3px;
+                text-shadow:
+                    0 0 20px var(--val-glow),
+                    0 0 60px rgba(255, 70, 85, 0.2);
+                margin-bottom: 10px;
+            }
+
+            .page-sub {
+                font-size: 10px;
+                color: rgba(236, 232, 225, 0.3);
+                letter-spacing: 2px;
+            }
+
+            /* ── LAYOUT ── */
+            .layout {
+                display: flex;
+                gap: 30px;
+                align-items: flex-start;
+                width: 100%;
+                max-width: 860px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            /* ── CONFIG PANEL ── */
+            .config-panel {
+                background: #0a1520;
+                border: 1px solid rgba(255, 70, 85, 0.2);
+                width: 390px;
+                flex-shrink: 0;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .config-panel::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--val-red),
+                    transparent
+                );
+            }
+
+            .panel-section {
+                padding: 18px 20px;
+                border-bottom: 1px solid rgba(255, 70, 85, 0.15);
+            }
+            .panel-section:last-child {
+                border-bottom: none;
+            }
+
+            .section-title {
+                font-family: "Press Start 2P", monospace;
+                font-size: 6px;
+                color: var(--val-red);
+                letter-spacing: 2px;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .section-title::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: linear-gradient(
+                    90deg,
+                    rgba(255, 70, 85, 0.3),
+                    transparent
+                );
+            }
+
+            .field {
+                margin-bottom: 12px;
+            }
+            .field:last-child {
+                margin-bottom: 0;
+            }
+
+            .field label {
+                display: block;
+                font-size: 9px;
+                color: rgba(236, 232, 225, 0.4);
+                letter-spacing: 1px;
+                margin-bottom: 5px;
+            }
+
+            .field input,
+            .field select {
+                width: 100%;
+                background: rgba(0, 0, 0, 0.45);
+                border: 1px solid rgba(255, 70, 85, 0.25);
+                color: var(--val-white);
+                font-family: "Share Tech Mono", monospace;
+                font-size: 13px;
+                padding: 9px 10px;
+                outline: none;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+                letter-spacing: 1px;
+                -webkit-appearance: none;
+            }
+            .field input:focus,
+            .field select:focus {
+                border-color: var(--val-red);
+                box-shadow: 0 0 0 1px rgba(255, 70, 85, 0.15);
+            }
+            .field input::placeholder {
+                color: rgba(236, 232, 225, 0.18);
+            }
+            .field select option {
+                background: #0a1520;
+            }
+
+            .field-row {
+                display: flex;
+                gap: 10px;
+            }
+            .field-row .field {
+                flex: 1;
+            }
+
+            /* API key */
+            .api-wrap {
+                position: relative;
+            }
+            .api-wrap input {
+                padding-right: 38px;
+                letter-spacing: 0.5px;
+                font-size: 11px;
+            }
+
+            /* Boutons */
+            .btn-main {
+                width: 100%;
+                background: var(--val-red);
+                border: none;
+                color: #fff;
+                font-family: "Press Start 2P", monospace;
+                font-size: 7px;
+                padding: 12px;
+                cursor: pointer;
+                letter-spacing: 2px;
+                position: relative;
+                top: 0;
+                box-shadow: 0 4px 0#6b1217;
+                transition:
+                    top 0.05s,
+                    box-shadow 0.05s,
+                    background 0.15s;
+            }
+            .btn-main:hover:not(:disabled) {
+                background: #6b1217;
+            }
+            .btn-main:active:not(:disabled) {
+                top: 4px;
+                box-shadow: none;
+            }
+            .btn-main:disabled {
+                background: #333;
+                box-shadow: 0 4px 0 #111;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
+            .btn-row {
+                display: flex;
+                gap: 8px;
+                margin-top: 10px;
+            }
+
+            .btn-sm {
+                flex: 1;
+                background: transparent;
+                border: 1px solid rgba(255, 70, 85, 0.3);
+                color: rgba(236, 232, 225, 0.4);
+                font-family: "Press Start 2P", monospace;
+                font-size: 5px;
+                padding: 8px 6px;
+                cursor: pointer;
+                letter-spacing: 1px;
+                transition: all 0.15s;
+                text-align: center;
+            }
+            .btn-sm:hover {
+                border-color: var(--val-red);
+                color: var(--val-red);
+            }
+            .btn-sm.green {
+                border-color: rgba(74, 222, 128, 0.3);
+                color: rgba(74, 222, 128, 0.5);
+            }
+            .btn-sm.green:hover {
+                border-color: #4ade80;
+                color: #4ade80;
+            }
+            .btn-sm.red {
+                border-color: rgba(248, 113, 113, 0.3);
+                color: rgba(248, 113, 113, 0.5);
+            }
+            .btn-sm.red:hover {
+                border-color: #f87171;
+                color: #f87171;
+            }
+
+            /* ── LINK OUTPUT ── */
+            .link-box {
+                display: none;
+                margin-top: 14px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                padding: 12px 14px;
+                gap: 10px;
+                align-items: center;
+            }
+            .link-box.visible {
+                display: flex;
+            }
+            .link-url {
+                flex: 1;
+                font-size: 10px;
+                color: rgba(236, 232, 225, 0.45);
+                word-break: break-all;
+                line-height: 1.4;
+                font-weight: 700;
+            }
+            .copy-btn {
+                background: var(--val-red);
+                border: none;
+                border-radius: 8px;
+                padding: 6px 10px;
+                font-family: "Press Start 2P", cursive;
+                font-size: 10px;
+                color: var(--val-white);
+                cursor: pointer;
+                white-space: nowrap;
+                flex-shrink: 0;
+                transition: opacity 0.2s;
+            }
+            .copy-btn:hover {
+                opacity: 0.85;
+            }
+
+            /* ── WIDGET SIDE ── */
+            .widget-side {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .widget-badge {
+                font-family: "Press Start 2P", monospace;
+                font-size: 5px;
+                color: rgba(236, 232, 225, 0.2);
+                letter-spacing: 2px;
+            }
+
+            .widget {
+                position: relative;
+                padding: 14px 18px 14px 14px;
+                min-width: 280px;
+            }
+
+            /* RANK DISPLAY */
+            .rank-section {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .rank-icon-wrap {
+                position: relative;
+                flex-shrink: 0;
+            }
+
+            .rank-canvas {
+                display: block;
+            }
+
+            .rank-info {
+                flex: 1;
+            }
+
+            .rank-name {
+                font-size: 9px;
+                color: var(--val-white);
+                letter-spacing: 1px;
+                margin-bottom: 4px;
+                text-shadow: 0 0 10px var(--val-red);
+            }
+
+            /* RR Bar */
+            .rr-bar-wrap {
+                position: relative;
+                height: 10px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 70, 85, 0.4);
+            }
+
+            .rr-bar-fill {
+                height: 100%;
+                background: linear-gradient(90deg, var(--val-red), #ff8a93);
+                position: relative;
+                transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                box-shadow: 0 0 8px var(--val-glow);
+            }
+
+            .rr-bar-fill::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: rgba(255, 255, 255, 0.25);
+            }
+
+            /* Scanlines sur la barre */
+            .rr-bar-scanlines {
+                display: none;
+            }
+
+            /* RR Counter */
+            .rr-section {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+
+            .rr-label {
+                font-size: 6px;
+                color: rgba(236, 232, 225, 0.5);
+                letter-spacing: 2px;
+            }
+
+            .rr-value {
+                font-size: 18px;
+                color: var(--val-white);
+                text-shadow: 0 0 12px rgb(116 20 34);
+                line-height: 1;
+                position: relative;
+            }
+
+            .rr-suffix {
+                font-size: 7px;
+                color: var(--val-red);
+                margin-left: 3px;
+                vertical-align: middle;
+            }
+
+            /* Gain/Loss indicator */
+            .delta {
+                font-size: 7px;
+                padding: 2px 5px;
+                border: 2px solid;
+                position: relative;
+            }
+
+            .delta.positive {
+                color: #4ade80;
+                border-color: #4ade80;
+                text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+                box-shadow: 0 0 8px rgba(74, 222, 128, 0.2);
+            }
+
+            .delta.negative {
+                color: #f87171;
+                border-color: #f87171;
+                text-shadow: 0 0 8px rgba(248, 113, 113, 0.6);
+                box-shadow: 0 0 8px rgba(248, 113, 113, 0.2);
+            }
+
+            .delta.neutral {
+                color: var(--val-white);
+                border-color: rgba(236, 232, 225, 0.3);
+            }
+
+            /* Scanlines overlay */
+            .scanlines {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image: repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.04) 2px,
+                    rgba(0, 0, 0, 0.04) 4px
+                );
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            /* Flicker animation */
+            @keyframes flicker {
+                0%,
+                96%,
+                100% {
+                    opacity: 1;
+                }
+                97% {
+                    opacity: 0.97;
+                }
+                98% {
+                    opacity: 0.94;
+                }
+                99% {
+                    opacity: 0.98;
+                }
+            }
+
+            .widget {
+                animation:
+                    borderPulse 3s ease-in-out infinite,
+                    flicker 8s ease-in-out infinite;
+            }
+
+            /* Pixel noise dot */
+            .noise-dot {
+                position: absolute;
+                width: 2px;
+                height: 2px;
+                background: var(--val-red);
+                opacity: 0;
+                animation: noiseBlink 4s infinite;
+            }
+
+            @keyframes noiseBlink {
+                0%,
+                95%,
+                100% {
+                    opacity: 0;
+                }
+                96% {
+                    opacity: 0.6;
+                }
+                97% {
+                    opacity: 0;
+                }
+                98% {
+                    opacity: 0.4;
+                }
+            }
+
+            /* ── OBS TIP ── */
+            .obs-tip {
+                background: rgba(0, 0, 0, 0.35);
+                border: 1px solid rgba(0, 180, 216, 0.2);
+                padding: 16px 20px;
+                max-width: 860px;
+                width: 100%;
+            }
+            .obs-tip-title {
+                font-family: "Press Start 2P", monospace;
+                font-size: 8px;
+                color: var(--val-teal);
+                letter-spacing: 2px;
+                margin-bottom: 10px;
+            }
+            .obs-tip p {
+                font-size: 8px;
+                color: rgba(236, 232, 225, 0.38);
+                line-height: 2;
+                letter-spacing: 0.5px;
+            }
+            .obs-tip code {
+                background: rgba(0, 180, 216, 0.08);
+                border: 1px solid rgba(0, 180, 216, 0.2);
+                color: var(--val-teal);
+                padding: 1px 5px;
+                font-family: "Press Start 2P", monospace;
+                font-size: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <div class="page-title">▸ VALORANT WIDGET</div>
+            <div class="page-sub">WIDGET VALORANT POUR TWITCH EN PIXEL ART</div>
+        </div>
+
+        <!-- LAYOUT -->
+        <div class="layout">
+            <!-- ════ CONFIG PANEL ════ -->
+            <div class="config-panel">
+                <!-- 01 JOUEUR -->
+                <div class="panel-section">
+                    <div class="section-title">01 PROFIL JOUEUR</div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label>PSEUDO</label>
+                            <input
+                                type="text"
+                                id="inp-name"
+                                placeholder="Ton Pseudo"
+                                maxlength="24"
+                            />
+                        </div>
+                        <div class="field">
+                            <label>TAG (no #)</label>
+                            <input
+                                type="text"
+                                id="inp-tag"
+                                placeholder="EUW"
+                                maxlength="8"
+                            />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>RÉGION</label>
+                        <select id="inp-region">
+                            <option value="eu">EU — Europe</option>
+                            <option value="na">NA — Amérique du Nord</option>
+                            <option value="ap">AP — Asie-Pacifique</option>
+                            <option value="kr">KR — Corée</option>
+                            <option value="latam">
+                                LATAM — Amérique Latine
+                            </option>
+                            <option value="br">BR — Brésil</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>TIMEZONE</label>
+                        <select id="inp-tz">
+                            <option value="Europe/Paris">Central EU</option>
+                            <option value="Europe/London">London</option>
+                            <option value="Europe/Athens">Eastern EU</option>
+                            <option value="America/Toronto">Eastern</option>
+                            <option value="America/Chicago">Central</option>
+                            <option value="America/Denver">Mountain</option>
+                            <option value="America/Los_Angeles">Pacific</option>
+                            <option value="America/Sao_Paulo">Brazil</option>
+                            <option value="Asia/Tokyo">Japan</option>
+                            <option value="Asia/Seoul">Korea</option>
+                            <option value="Australia/Sydney">Sydney</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 02 API -->
+                <div class="panel-section">
+                    <div class="section-title">02 API HENRIK DEV</div>
+                    <div class="field">
+                        <label
+                            >CLÉ API &nbsp;<span
+                                style="
+                                    color: rgba(236, 232, 225, 0.2);
+                                    font-size: 8px;
+                                "
+                            ></span
+                        ></label>
+                        <div class="api-wrap">
+                            <input
+                                type="password"
+                                id="inp-key"
+                                placeholder="HDEV-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        class="btn-main"
+                        id="mainBtn"
+                        onclick="generateLink()"
+                    >
+                        ▶ Générer un lien OBS
+                    </button>
+
+                    <div class="link-box" id="link-box">
+                        <span class="link-url" id="link-url"></span>
+                        <button class="copy-btn" onclick="copyLink()">
+                            Copie
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════ WIDGET ════ -->
+            <div class="widget-side">
+                <div class="widget-badge">
+                    APERÇU OVERLAY — OBS BROWSER SOURCE
+                </div>
+
+                <div class="widget" id="widget">
+                    <!-- Noise dots déco -->
+                    <div
+                        class="noise-dot"
+                        style="top: 20px; right: 30px; animation-delay: 1.2s"
+                    ></div>
+                    <div
+                        class="noise-dot"
+                        style="top: 60px; left: 15px; animation-delay: 3s"
+                    ></div>
+
+                    <!-- RANK SECTION -->
+                    <div class="rank-section">
+                        <div class="rank-icon-wrap">
+                            <img
+                                id="rank-icon"
+                                src="https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png"
+                                alt="rank"
+                                width="40px"
+                            />
+                        </div>
+                        <div class="rank-info">
+                            <div class="rank-name" id="rank-name">Unranked</div>
+                            <div class="rr-section" style="margin-bottom: 5px">
+                                <span class="rr-value" id="rank-sub"
+                                    >00<span class="rr-suffix">RR</span></span
+                                >
+                                <span class="delta neutral" id="rr-delta"
+                                    >+0</span
+                                >
+                            </div>
+                            <div class="rr-bar-wrap">
+                                <div
+                                    class="rr-bar-fill"
+                                    id="rr-fill"
+                                    style="width: 0%"
+                                ></div>
+                                <span class="rr-bar-scanlines">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget-badge" id="autoLabel"></div>
+            </div>
+        </div>
+
+        <!-- OBS TIP -->
+        <div class="obs-tip">
+            <div class="obs-tip-title">▸ INTÉGRATION OBS / TWITCH</div>
+            <p>
+                Dans OBS : <code>Sources</code> → <code>+</code> →
+                <code>Navigateur</code> → colle le chemin local de ce
+                fichier.<br />
+                Coche <code>Fond transparent</code> et
+                <code>Actualiser à chaque activation de scène</code>.<br />
+                Taille recommandée : <code>350 × 100 px</code>.
+                <br />
+                Clé API gratuite juste
+                <code>
+                    <a
+                        href="https://api.henrikdev.xyz/dashboard/"
+                        target="_blank"
+                        class="api-link"
+                        >ici</a
+                    >
+                </code>
+            </p>
+        </div>
+
+        <script>
+            const BASE_URL = window.location.href
+                .replace("index.html", "")
+                .replace(/\/$/, "");
+
+            // ── DEFAULTS ────────────────────────────────────────────
+            let fetchTimer = null;
+
+            // ── RANK ICON MAP ────────────────────────────────────────
+            const RANK_ICON = {
+                Unranked:
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png",
+                "Iron 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/3/smallicon.png",
+                "Iron 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/4/smallicon.png",
+                "Iron 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/5/smallicon.png",
+                "Bronze 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/6/smallicon.png",
+                "Bronze 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/7/smallicon.png",
+                "Bronze 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/8/smallicon.png",
+                "Silver 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/9/smallicon.png",
+                "Silver 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/10/smallicon.png",
+                "Silver 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/11/smallicon.png",
+                "Gold 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/12/smallicon.png",
+                "Gold 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/13/smallicon.png",
+                "Gold 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/14/smallicon.png",
+                "Platinum 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/15/smallicon.png",
+                "Platinum 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/16/smallicon.png",
+                "Platinum 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/17/smallicon.png",
+                "Diamond 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/18/smallicon.png",
+                "Diamond 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/19/smallicon.png",
+                "Diamond 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/20/smallicon.png",
+                "Ascendant 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/21/smallicon.png",
+                "Ascendant 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/22/smallicon.png",
+                "Ascendant 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/23/smallicon.png",
+                "Immortal 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/24/smallicon.png",
+                "Immortal 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/25/smallicon.png",
+                "Immortal 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/26/smallicon.png",
+                Radiant:
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/27/smallicon.png",
+            };
+
+            function rankIconUrl(tier) {
+                if (RANK_ICON[tier]) return RANK_ICON[tier];
+                for (const [k, v] of Object.entries(RANK_ICON)) {
+                    if (k.toLowerCase() === (tier || "").toLowerCase())
+                        return v;
+                }
+                return RANK_ICON["Unranked"];
+            }
+
+            // ── AUTO-FETCH TRIGGER ───────────────────────────────────
+            function onFieldChange() {
+                const name = document.getElementById("inp-name").value.trim();
+                const tag = document.getElementById("inp-tag").value.trim();
+                const key = document.getElementById("inp-key").value.trim();
+
+                // Debounce API call by 800ms so it doesn't fire on every keystroke
+                clearTimeout(fetchTimer);
+                if (name && tag && key) {
+                    fetchTimer = setTimeout(fetchPreview, 800);
+                }
+            }
+
+            // ── LIVE PREVIEW FETCH ───────────────────────────────────
+            async function fetchPreview() {
+                const name = document.getElementById("inp-name").value.trim();
+                const tag = document.getElementById("inp-tag").value.trim();
+                const key = document.getElementById("inp-key").value.trim();
+                const region = document.getElementById("inp-region").value;
+                const tz = document.getElementById("inp-tz").value;
+
+                if (!name || !tag || !key) return;
+
+                const headers = { Authorization: key };
+                const base = "https://api.henrikdev.xyz/valorant";
+
+                // Show loading state
+                document.getElementById("rank-name").textContent =
+                    "Chargement...";
+                document.getElementById("rank-sub").textContent = "...";
+
+                try {
+                    const [mmrRes, matchRes] = await Promise.all([
+                        fetch(
+                            `${base}/v2/mmr/${region}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`,
+                            { headers },
+                        ),
+                        fetch(
+                            `${base}/v1/lifetime/matches/${region}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}?mode=competitive&size=20`,
+                            { headers },
+                        ),
+                    ]);
+
+                    const mmrJson = await mmrRes.json();
+                    const matchJson = await matchRes.json();
+
+                    if (mmrJson.status === 200) {
+                        const d = mmrJson.data.current_data;
+                        const tier = d.currenttierpatched || "Unranked";
+                        const rr = d.ranking_in_tier || 0;
+                        const lastRrChange =
+                            mmrJson.data.by_season
+                                ?.ACT_WIN_PROGRESSION_CHANGE ??
+                            d.mmr_change_to_last_game ??
+                            0;
+
+                        document.getElementById("rank-icon").src =
+                            rankIconUrl(tier);
+                        document.getElementById("rank-name").textContent = tier;
+                        document.getElementById("rank-sub").innerHTML =
+                            `${rr}<span class="rr-suffix">RR</span>`;
+                        document.getElementById("rr-fill").style.width =
+                            rr + "%";
+                        document.querySelector(
+                            ".rr-bar-scanlines",
+                        ).textContent = `${rr} / 100`;
+
+                        const deltaEl = document.getElementById("rr-delta");
+                        if (lastRrChange > 0) {
+                            deltaEl.textContent = `+${lastRrChange} RR`;
+                            deltaEl.className = "delta positive";
+                        } else if (lastRrChange < 0) {
+                            deltaEl.textContent = `${lastRrChange} RR`;
+                            deltaEl.className = "delta negative";
+                        } else {
+                            deltaEl.textContent = `±0 RR`;
+                            deltaEl.className = "delta neutral";
+                        }
+                    } else {
+                        document.getElementById("rank-name").textContent =
+                            "Introuvable";
+                        document.getElementById("rank-sub").textContent =
+                            "Vérifier le name/tag/region";
+                    }
+
+                    if (
+                        matchJson.status === 200 &&
+                        matchJson.data?.length > 0
+                    ) {
+                        const today = new Date().toLocaleDateString("fr-FR", {
+                            timeZone: tz,
+                        });
+                        const todayMatches = matchJson.data.filter((m) => {
+                            return (
+                                new Date(m.meta.started_at).toLocaleDateString(
+                                    "fr-FR",
+                                    { timeZone: tz },
+                                ) === today
+                            );
+                        });
+                    }
+                } catch (e) {
+                    document.getElementById("rank-name").textContent =
+                        "Erreur API";
+                    document.getElementById("rank-sub").textContent =
+                        "Vérifiez votre clé";
+                    console.error(e);
+                }
+            }
+
+            // ── GENERATE LINK ────────────────────────────────────────
+            function generateLink() {
+                const name = document.getElementById("inp-name").value.trim();
+                const tag = document.getElementById("inp-tag").value.trim();
+                const key = document.getElementById("inp-key").value.trim();
+                const region = document.getElementById("inp-region").value;
+                const tz = document.getElementById("inp-tz").value;
+
+                if (!name || !tag || !key) {
+                    alert(
+                        "Veuillez renseigner votre nom Riot, votre tag et votre clé API.",
+                    );
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    name,
+                    tag,
+                    key,
+                    region,
+                    tz,
+                });
+                const url = `${BASE_URL}/overlay.html?${params.toString()}`;
+
+                document.getElementById("link-url").textContent = url;
+                document.getElementById("link-box").classList.add("visible");
+                document.getElementById("link-hint").style.display = "block";
+            }
+
+            function copyLink() {
+                const url = document.getElementById("link-url").textContent;
+                navigator.clipboard.writeText(url).then(() => {
+                    const btn = document.querySelector(".copy-btn");
+                    btn.textContent = "Copié!";
+                    setTimeout(() => (btn.textContent = "Copie"), 2000);
+                });
+            }
+
+            // ── ATTACH LISTENERS ─────────────────────────────────────
+            document
+                .getElementById("inp-name")
+                .addEventListener("input", onFieldChange);
+            document
+                .getElementById("inp-tag")
+                .addEventListener("input", onFieldChange);
+            document
+                .getElementById("inp-key")
+                .addEventListener("input", onFieldChange);
+            document
+                .getElementById("inp-region")
+                .addEventListener("change", () => {
+                    clearTimeout(fetchTimer);
+                    fetchTimer = setTimeout(fetchPreview, 200);
+                });
+        </script>
+    </body>
+</html>

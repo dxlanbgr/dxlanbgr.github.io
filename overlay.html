@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Valorant Widget</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+            :root {
+                --val-red: #741422;
+                --val-dark: #0f1923;
+                --val-darker: #080e14;
+                --val-white: #ece8e1;
+                --val-gold: #f5a623;
+                --val-teal: #00b4d8;
+                --val-glow: rgba(255, 70, 85, 0.5);
+                --pixel: 3px;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                image-rendering: pixelated;
+            }
+
+            body {
+                background: transparent;
+                width: 320px;
+                padding: 10px;
+                font-family: "Press Start 2P", monospace;
+            }
+
+            .widget {
+                position: relative;
+                padding: 14px 18px 14px 14px;
+                min-width: 280px;
+            }
+
+            /* RANK DISPLAY */
+            .rank-section {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .rank-icon-wrap {
+                position: relative;
+                flex-shrink: 0;
+            }
+
+            .rank-canvas {
+                display: block;
+            }
+
+            .rank-info {
+                flex: 1;
+            }
+
+            .rank-name {
+                font-size: 9px;
+                color: var(--val-white);
+                letter-spacing: 1px;
+                margin-bottom: 4px;
+                text-shadow: 0 0 10px var(--val-red);
+            }
+
+            /* RR Bar */
+            .rr-bar-wrap {
+                position: relative;
+                height: 10px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 70, 85, 0.4);
+            }
+
+            .rr-bar-fill {
+                height: 100%;
+                background: linear-gradient(90deg, var(--val-red), #ff8a93);
+                position: relative;
+                transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                box-shadow: 0 0 8px var(--val-glow);
+            }
+
+            .rr-bar-fill::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: rgba(255, 255, 255, 0.25);
+            }
+
+            /* Scanlines sur la barre */
+            .rr-bar-scanlines {
+                display: none;
+            }
+
+            /* RR Counter */
+            .rr-section {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+
+            .rr-label {
+                font-size: 6px;
+                color: rgba(236, 232, 225, 0.5);
+                letter-spacing: 2px;
+            }
+
+            .rr-value {
+                font-size: 18px;
+                color: var(--val-white);
+                text-shadow: 0 0 12px rgb(116 20 34);
+                line-height: 1;
+                position: relative;
+            }
+
+            .rr-suffix {
+                font-size: 7px;
+                color: var(--val-red);
+                margin-left: 3px;
+                vertical-align: middle;
+            }
+
+            /* Gain/Loss indicator */
+            .delta {
+                font-size: 7px;
+                padding: 2px 5px;
+                border: 2px solid;
+                position: relative;
+            }
+
+            .delta.positive {
+                color: #4ade80;
+                border-color: #4ade80;
+                text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+                box-shadow: 0 0 8px rgba(74, 222, 128, 0.2);
+            }
+
+            .delta.negative {
+                color: #f87171;
+                border-color: #f87171;
+                text-shadow: 0 0 8px rgba(248, 113, 113, 0.6);
+                box-shadow: 0 0 8px rgba(248, 113, 113, 0.2);
+            }
+
+            .delta.neutral {
+                color: var(--val-white);
+                border-color: rgba(236, 232, 225, 0.3);
+            }
+
+            /* Scanlines overlay */
+            .scanlines {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image: repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.04) 2px,
+                    rgba(0, 0, 0, 0.04) 4px
+                );
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            /* Flicker animation */
+            @keyframes flicker {
+                0%,
+                96%,
+                100% {
+                    opacity: 1;
+                }
+                97% {
+                    opacity: 0.97;
+                }
+                98% {
+                    opacity: 0.94;
+                }
+                99% {
+                    opacity: 0.98;
+                }
+            }
+
+            .widget {
+                animation:
+                    borderPulse 3s ease-in-out infinite,
+                    flicker 8s ease-in-out infinite;
+            }
+
+            /* Pixel noise dot */
+            .noise-dot {
+                position: absolute;
+                width: 2px;
+                height: 2px;
+                background: var(--val-red);
+                opacity: 0;
+                animation: noiseBlink 4s infinite;
+            }
+
+            @keyframes noiseBlink {
+                0%,
+                95%,
+                100% {
+                    opacity: 0;
+                }
+                96% {
+                    opacity: 0.6;
+                }
+                97% {
+                    opacity: 0;
+                }
+                98% {
+                    opacity: 0.4;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="widget" id="widget">
+            <!-- Noise dots déco -->
+            <div
+                class="noise-dot"
+                style="top: 20px; right: 30px; animation-delay: 1.2s"
+            ></div>
+            <div
+                class="noise-dot"
+                style="top: 60px; left: 15px; animation-delay: 3s"
+            ></div>
+
+            <!-- RANK SECTION -->
+            <div class="rank-section">
+                <div class="rank-icon-wrap">
+                    <img
+                        id="rank-icon"
+                        src="https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png"
+                        alt="rank"
+                        width="40px"
+                    />
+                </div>
+                <div class="rank-info">
+                    <div class="rank-name" id="rank-name">Chargement...</div>
+                    <div class="rr-section" style="margin-bottom: 5px">
+                        <span class="rr-value" id="rank-sub">Connexion</span>
+                        <span class="delta positive" id="rr-delta">+20</span>
+                    </div>
+                    <div class="rr-bar-wrap">
+                        <div
+                            class="rr-bar-fill"
+                            id="rr-fill"
+                            style="width: 0%"
+                        ></div>
+                        <span class="rr-bar-scanlines" id="rr-value"
+                            >0/100</span
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // ── CONFIG ──────────────────────────
+            const params = new URLSearchParams(window.location.search);
+            const cfg = {
+                name: params.get("name") || "",
+                tag: params.get("tag") || "",
+                key: params.get("key") || "",
+                region: params.get("region") || "eu",
+                tz: params.get("tz") || "Europe/Paris",
+            };
+
+            // ── COLORS ─────────────────────────────────────────
+            function applyColors() {
+                document.querySelector(".rr-bar-fill").style.background =
+                    `linear-gradient(90deg, #741422cc, #741422)`;
+
+                const textEls = document.querySelectorAll(
+                    ".rank-name, .rank-sub, .rr-label, .stat-chip .lbl",
+                );
+            }
+
+            // ── RANK ICON ────────────────────────────────────────
+            const RANK_ICON = {
+                Unranked:
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/smallicon.png",
+                "Iron 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/3/smallicon.png",
+                "Iron 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/4/smallicon.png",
+                "Iron 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/5/smallicon.png",
+                "Bronze 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/6/smallicon.png",
+                "Bronze 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/7/smallicon.png",
+                "Bronze 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/8/smallicon.png",
+                "Silver 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/9/smallicon.png",
+                "Silver 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/10/smallicon.png",
+                "Silver 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/11/smallicon.png",
+                "Gold 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/12/smallicon.png",
+                "Gold 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/13/smallicon.png",
+                "Gold 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/14/smallicon.png",
+                "Platinum 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/15/smallicon.png",
+                "Platinum 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/16/smallicon.png",
+                "Platinum 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/17/smallicon.png",
+                "Diamond 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/18/smallicon.png",
+                "Diamond 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/19/smallicon.png",
+                "Diamond 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/20/smallicon.png",
+                "Ascendant 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/21/smallicon.png",
+                "Ascendant 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/22/smallicon.png",
+                "Ascendant 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/23/smallicon.png",
+                "Immortal 1":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/24/smallicon.png",
+                "Immortal 2":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/25/smallicon.png",
+                "Immortal 3":
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/26/smallicon.png",
+                Radiant:
+                    "https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/27/smallicon.png",
+            };
+
+            function rankIconUrl(tier) {
+                if (RANK_ICON[tier]) return RANK_ICON[tier];
+                for (const [k, v] of Object.entries(RANK_ICON)) {
+                    if (k.toLowerCase() === (tier || "").toLowerCase())
+                        return v;
+                }
+                return RANK_ICON["Unranked"];
+            }
+
+            // ── FETCH ────────────────────────────────────────────────
+            async function fetchData() {
+                if (!cfg.name || !cfg.tag || !cfg.key) {
+                    document.getElementById("rank-name").textContent =
+                        "Aucune config";
+                    document.getElementById("rank-sub").textContent =
+                        "Générez d'abord un lien";
+                    return;
+                }
+
+                const headers = { Authorization: cfg.key };
+                const base = "https://api.henrikdev.xyz/valorant";
+                const region = cfg.region;
+
+                try {
+                    const [mmrRes, matchRes] = await Promise.all([
+                        fetch(
+                            `${base}/v2/mmr/${region}/${encodeURIComponent(cfg.name)}/${encodeURIComponent(cfg.tag)}`,
+                            { headers },
+                        ),
+                        fetch(
+                            `${base}/v1/lifetime/matches/${region}/${encodeURIComponent(cfg.name)}/${encodeURIComponent(cfg.tag)}?mode=competitive&size=20`,
+                            { headers },
+                        ),
+                    ]);
+
+                    const mmrJson = await mmrRes.json();
+                    const matchJson = await matchRes.json();
+
+                    if (mmrJson.status === 200) {
+                        const d = mmrJson.data.current_data;
+                        const tier = d.currenttierpatched || "Unranked";
+                        const rr = d.ranking_in_tier || 0;
+                        const lastRrChange =
+                            mmrJson.data.by_season
+                                ?.ACT_WIN_PROGRESSION_CHANGE ??
+                            d.mmr_change_to_last_game ??
+                            0;
+
+                        document.getElementById("rank-icon").src =
+                            rankIconUrl(tier);
+                        document.getElementById("rank-name").textContent = tier;
+                        document.getElementById("rank-sub").innerHTML =
+                            `${rr}<span class="rr-suffix">RR</span>`;
+                        document.getElementById("rr-fill").style.width =
+                            rr + "%";
+                        document.getElementById("rr-value").textContent =
+                            `${rr} / 100`;
+
+                        const deltaEl = document.getElementById("rr-delta");
+                        if (lastRrChange > 0) {
+                            deltaEl.textContent = `+${lastRrChange} RR`;
+                            deltaEl.className = "delta positive";
+                        } else if (lastRrChange < 0) {
+                            deltaEl.textContent = `${lastRrChange} RR`;
+                            deltaEl.className = "delta negative";
+                        } else {
+                            deltaEl.textContent = `±0 RR`;
+                            deltaEl.className = "delta neutral";
+                        }
+                    }
+
+                    if (
+                        matchJson.status === 200 &&
+                        matchJson.data?.length > 0
+                    ) {
+                        const tz = cfg.tz;
+                        const today = new Date().toLocaleDateString("fr-FR", {
+                            timeZone: tz,
+                        });
+                        const todayMatches = matchJson.data.filter((m) => {
+                            const d = new Date(m.meta.started_at);
+                            return (
+                                d.toLocaleDateString("fr-FR", {
+                                    timeZone: tz,
+                                }) === today
+                            );
+                        });
+                    }
+                } catch (e) {
+                    document.getElementById("rank-name").textContent =
+                        "Erreur API";
+                    document.getElementById("rank-sub").textContent =
+                        "Vérifiez votre lien";
+                    console.error(e);
+                }
+            }
+
+            applyColors();
+            fetchData();
+            setInterval(fetchData, 60000);
+        </script>
+    </body>
+</html>
